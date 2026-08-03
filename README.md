@@ -1,8 +1,10 @@
+[中文](README_zh.md) | **English**
+
 # Yiliphoton LiDAR Driver SDK
 
-## 概述
+## Overview
 
-**yiliphoton_lidar_sdk** 是一力光子为 V192 / P60 激光雷达配套的纯 C++ 驱动库，不依赖 ROS，可直接集成到任意 Linux 工程中。
+**yiliphoton_lidar_sdk** is a pure C++ driver library for Yiliphoton V192 / P60 LiDAR sensors. It has no ROS dependency and can be integrated directly into any Linux project.
 
 ```
   +---------------------------+
@@ -12,53 +14,53 @@
   |  |   Driver Core       |  |
   |  |  (decoder / input)  |  |
   |  +---------------------+  |
-  |  |  Software Filter    |  |  ← 预编译 libaglidar_ag1.so
+  |  |  Software Filter    |  |  ← prebuilt libaglidar_ag1.so
   |  +---------------------+  |
   +---------------------------+
 ```
 
-### 支持的雷达型号
+### Supported LiDAR Models
 
-| 型号 | 类型 |
-|------|------|
-| V192 | 192 线 |
-| P60  | 96 通道 |
+| Model | Type |
+|-------|------|
+| V192 | 192-line |
+| P60  | 96-channel |
 
-### 支持的点类型
+### Supported Point Types
 
-| 类型 | 字段 |
-|------|------|
+| Type | Fields |
+|------|--------|
 | `PointXYZI`   | x, y, z, intensity |
 | `PointXYZIRT` | x, y, z, intensity, ring, range, confidence, timestamp |
 | `PointXYZIRTC`| x, y, z, intensity, ring, range, confidence, timestamp, rgb |
 
 ---
 
-## 目录结构
+## Directory Structure
 
 ```
 yiliphoton_lidar_sdk/
-├── src/ylp_driver/          # 驱动头文件（header-only + 少量 .cpp）
-│   ├── api/                 # 对外接口 lidar_driver.hpp
-│   ├── common/              # 日志、错误码、缓冲区等
+├── src/ylp_driver/          # Driver headers (header-only + minimal .cpp)
+│   ├── api/                 # Public API: lidar_driver.hpp
+│   ├── common/              # Logging, error codes, buffers, etc.
 │   ├── driver/
-│   │   ├── decoder/V192/    # V192 解码器
-│   │   ├── decoder/P60/     # P60 解码器
-│   │   ├── algorithm/       # 软件滤波接口
-│   │   └── input/           # UDP / PCAP 输入
-│   ├── config/              # 标定文件
-│   └── msg/                 # 点云消息定义
-├── lib/                     # 预编译软件滤波库
+│   │   ├── decoder/V192/    # V192 decoder
+│   │   ├── decoder/P60/     # P60 decoder
+│   │   ├── algorithm/       # Software filter interface
+│   │   └── input/           # UDP / PCAP input
+│   ├── config/              # Calibration files
+│   └── msg/                 # Point cloud message definitions
+├── lib/                     # Prebuilt software filter libraries
 │   ├── libaglidar_ag1.so    # x86-64
 │   └── arm64/libag1.so      # ARM64
-├── cmake/                   # find_package 支持
-├── demo/                    # 示例程序
-└── tool/                    # 工具程序
+├── cmake/                   # find_package support
+├── demo/                    # Example programs
+└── tool/                    # Utility programs
 ```
 
 ---
 
-## 安装依赖
+## Dependencies
 
 ```bash
 sudo apt-get install -y libeigen3-dev libpcap-dev
@@ -66,7 +68,7 @@ sudo apt-get install -y libeigen3-dev libpcap-dev
 
 ---
 
-## 编译
+## Build
 
 ```bash
 mkdir build && cd build
@@ -74,31 +76,31 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 ```
 
-### 常用编译选项
+### Build Options
 
-| 选项 | 默认 | 说明 |
-|------|------|------|
-| `COMPILE_DEMOS` | ON | 编译示例程序 |
-| `COMPILE_TOOLS` | OFF | 编译工具程序（需要 PCL） |
-| `ENABLE_TRANSFORM` | OFF | 启用坐标变换（需要 Eigen） |
-| `DISABLE_PCAP_PARSE` | OFF | 禁用 PCAP 解析（不需要 libpcap） |
-| `ENABLE_PCL_POINTCLOUD` | OFF | 使用 PCL 点云类型 |
-| `ENABLE_POINT_EXTEND_FIELD` | OFF | 输出方位角/俯仰角扩展字段 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `COMPILE_DEMOS` | ON | Build example programs |
+| `COMPILE_TOOLS` | OFF | Build utility programs (requires PCL) |
+| `ENABLE_TRANSFORM` | OFF | Enable coordinate transform (requires Eigen) |
+| `DISABLE_PCAP_PARSE` | OFF | Disable PCAP parsing (removes libpcap dependency) |
+| `ENABLE_PCL_POINTCLOUD` | OFF | Use PCL point cloud types |
+| `ENABLE_POINT_EXTEND_FIELD` | OFF | Output azimuth/elevation extended fields |
 
 ---
 
-## 集成到自己的工程
+## Integration
 
-### 方式一：`find_package`（推荐，SDK 已安装到系统或指定路径）
+### Option 1: `find_package` (Recommended — SDK installed to system or custom prefix)
 
-先安装 SDK：
+Install the SDK first:
 
 ```bash
 cd build
-cmake --install . --prefix /usr/local   # 或任意路径
+cmake --install . --prefix /usr/local   # or any custom path
 ```
 
-然后在自己项目的 `CMakeLists.txt` 中：
+Then in your project's `CMakeLists.txt`:
 
 ```cmake
 find_package(ylp_driver REQUIRED)
@@ -107,17 +109,17 @@ target_link_libraries(your_target
   PRIVATE ylp_driver::ylp_driver_core)
 ```
 
-如果安装到非系统路径，指定 `ylp_driver_DIR`：
+If installed to a non-system path, specify `ylp_driver_DIR`:
 
 ```bash
 cmake .. -Dylp_driver_DIR=/your/install/prefix/lib/cmake/ylp_driver
 ```
 
-`pthread`、`Eigen3`、`pcap`、`libaglidar_ag1.so` 均通过传递依赖自动处理，不需要手动添加。
+`pthread`, `Eigen3`, `pcap`, and `libaglidar_ag1.so` are handled automatically through transitive dependencies — no manual linking required.
 
 ---
 
-### 方式二：`add_subdirectory`（SDK 作为源码子目录）
+### Option 2: `add_subdirectory` (SDK as a source subdirectory)
 
 ```cmake
 add_subdirectory(yiliphoton_lidar_sdk)
@@ -128,9 +130,9 @@ target_link_libraries(your_target
 
 ---
 
-## 核心 API
+## Core API
 
-只需包含一个头文件：
+Include a single header:
 
 ```cpp
 #include "ylp_driver/api/lidar_driver.hpp"
@@ -139,22 +141,22 @@ target_link_libraries(your_target
 
 ### `LidarDriver<T_PointCloud>`
 
-| 方法 | 说明 |
-|------|------|
-| `regPointCloudCallback(cb_get, cb_put)` | 注册点云内存管理回调（见下文） |
-| `regExceptionCallback(cb)` | 注册异常/状态通知回调 |
-| `init(param)` | 初始化，返回 `false` 表示失败 |
-| `start()` | 启动接收/解码线程 |
-| `stop()` | 停止所有线程 |
+| Method | Description |
+|--------|-------------|
+| `regPointCloudCallback(cb_get, cb_put)` | Register point cloud memory management callbacks (see below) |
+| `regExceptionCallback(cb)` | Register exception/status notification callback |
+| `init(param)` | Initialize; returns `false` on failure |
+| `start()` | Start receiving/decoding threads |
+| `stop()` | Stop all threads |
 
-### 内存管理机制
+### Memory Management
 
-驱动使用**双队列内存池**避免频繁分配。用户维护两个队列：
+The driver uses a **dual-queue memory pool** to avoid frequent allocations. The user maintains two queues:
 
-- **free_queue**：空闲的点云对象，供驱动填充
-- **stuffed_queue**：已填充的点云，供业务处理
+- **free_queue**: Empty point cloud objects available for the driver to fill
+- **stuffed_queue**: Filled point cloud objects ready for user processing
 
-驱动调用 `cb_get` 取一个空闲对象，填满后调用 `cb_put` 交还。用户处理完后把对象放回 `free_queue`。
+The driver calls `cb_get` to obtain an empty object, fills it, then calls `cb_put` to return it. After processing, the user pushes the object back to `free_queue`.
 
 ```
 Driver thread          User thread
@@ -165,13 +167,13 @@ Driver thread          User thread
      │  cb_put() ──→ stuffed_queue ──→ user processes
 ```
 
-> **注意**：`cb_get` 和 `cb_put` 在驱动的解码线程中被调用，不能做耗时操作。点云处理放在用户自己的线程里。
+> **Note**: `cb_get` and `cb_put` are called from the driver's decoding thread — do not perform blocking operations. Point cloud processing should be done in a separate user thread.
 
 ---
 
-## 使用示例
+## Examples
 
-### 1. 在线雷达（V192 / P60）
+### 1. Online LiDAR (V192 / P60)
 
 ```cpp
 #include "ylp_driver/api/lidar_driver.hpp"
@@ -182,7 +184,7 @@ Driver thread          User thread
 
 using namespace asensing::lidar;
 
-// 选择点类型：PointXYZI（仅坐标+强度）或 PointXYZIRT（含 ring/timestamp）
+// Choose point type: PointXYZI (coordinates + intensity) or PointXYZIRT (with ring/timestamp)
 using PointT    = PointXYZIRT;
 using CloudMsg  = PointCloudT<PointT>;
 
@@ -190,27 +192,26 @@ SyncQueue<std::shared_ptr<CloudMsg>> free_queue;
 SyncQueue<std::shared_ptr<CloudMsg>> stuffed_queue;
 std::atomic<bool> running{true};
 
-// 驱动回调：从空闲队列取对象（在驱动线程中调用，不要耗时）
+// Driver callback: get an object from the free queue (called in driver thread — must be non-blocking)
 std::shared_ptr<CloudMsg> cbGet()
 {
     auto msg = free_queue.pop();
     return msg ? msg : std::make_shared<CloudMsg>();
 }
 
-// 驱动回调：把填好的点云投入处理队列（在驱动线程中调用，不要耗时）
+// Driver callback: push filled point cloud to the processing queue (called in driver thread — must be non-blocking)
 void cbPut(std::shared_ptr<CloudMsg> msg)
 {
     stuffed_queue.push(msg);
 }
 
-// 异常/状态回调
+// Exception/status callback
 void cbException(const Error& err)
 {
-    // error_code_type: INFO_CODE / WARNING_CODE / ERROR_CODE
     YLP_WARNING << err.toString() << YLP_REND;
 }
 
-// 业务处理线程（可以耗时）
+// User processing thread (can perform blocking operations)
 void processThread()
 {
     while (running)
@@ -218,21 +219,21 @@ void processThread()
         auto msg = stuffed_queue.popWait();
         if (!msg) continue;
 
-        // msg->points 是 std::vector<PointT>
-        // msg->timestamp  帧时间戳（秒，double）
-        // msg->width      每行点数
-        // msg->height     行数
-        // msg->is_dual    是否双回波
+        // msg->points    std::vector<PointT>
+        // msg->timestamp frame timestamp (seconds, double)
+        // msg->width     points per row
+        // msg->height    number of rows
+        // msg->is_dual   dual-return mode flag
         for (const auto& pt : msg->points)
         {
-            // pt.x, pt.y, pt.z  单位：米
-            // pt.intensity       反射强度 0~255
-            // pt.ring            通道编号
-            // pt.timestamp       点时间戳（秒，double）
+            // pt.x, pt.y, pt.z  unit: meters
+            // pt.intensity       reflection intensity 0–255
+            // pt.ring            channel number
+            // pt.timestamp       point timestamp (seconds, double)
             (void)pt;
         }
 
-        free_queue.push(msg);   // 用完放回空闲队列
+        free_queue.push(msg);   // Return to free queue after processing
     }
 }
 
@@ -245,22 +246,22 @@ int main()
     signal(SIGINT, sigHandler);
 
     YLPDriverParam param;
-    param.lidar_type  = LidarType::V192;          // 或 LidarType::P60
+    param.lidar_type  = LidarType::V192;          // or LidarType::P60
     param.input_type  = InputType::ONLINE_LIDAR;
-    param.input_param.msop_port  = 51180;          // 雷达 MSOP 端口
-    param.input_param.difop_port = 9988;           // 雷达 DIFOP 端口
-    // param.input_param.host_address = "192.168.1.100";  // 可选：绑定本机 IP
+    param.input_param.msop_port  = 51180;          // LiDAR MSOP port
+    param.input_param.difop_port = 9988;           // LiDAR DIFOP port
+    // param.input_param.host_address = "192.168.1.100";  // Optional: bind to a specific NIC
 
-    param.decoder_param.wait_for_difop  = false;   // true：等到 DIFOP 包才出点
-    param.decoder_param.use_lidar_clock = false;   // false：用系统时钟打时间戳
-    param.decoder_param.dense_points    = false;   // true：丢弃 NaN 点
+    param.decoder_param.wait_for_difop  = false;   // true: wait for DIFOP before outputting points
+    param.decoder_param.use_lidar_clock = false;   // false: use system clock for timestamps
+    param.decoder_param.dense_points    = false;   // true: discard NaN points
 
     driver.regPointCloudCallback(cbGet, cbPut);
     driver.regExceptionCallback(cbException);
 
     if (!driver.init(param))
     {
-        YLP_ERROR << "初始化失败" << YLP_REND;
+        YLP_ERROR << "Initialization failed" << YLP_REND;
         return -1;
     }
 
@@ -274,9 +275,9 @@ int main()
 
 ---
 
-### 2. 回放 PCAP 文件
+### 2. PCAP File Replay
 
-与在线雷达的区别只有参数和退出检测：
+The only differences from online mode are the parameters and exit detection:
 
 ```cpp
 #include "ylp_driver/api/lidar_driver.hpp"
@@ -303,7 +304,7 @@ void cbPut(std::shared_ptr<CloudMsg> msg) { stuffed_queue.push(msg); }
 void cbException(const Error& err)
 {
     YLP_WARNING << err.toString() << YLP_REND;
-    if (err.error_code == ERRCODE_PCAPEXIT)   // PCAP 播放结束
+    if (err.error_code == ERRCODE_PCAPEXIT)   // PCAP playback finished
         running = false;
 }
 
@@ -314,9 +315,9 @@ void processThread()
         auto msg = stuffed_queue.popWait();
         if (!msg) continue;
 
-        YLP_MSG << "帧 " << msg->seq
-                << "  点数=" << msg->points.size()
-                << "  时间戳=" << std::fixed << msg->timestamp
+        YLP_MSG << "Frame " << msg->seq
+                << "  points=" << msg->points.size()
+                << "  timestamp=" << std::fixed << msg->timestamp
                 << YLP_REND;
 
         free_queue.push(msg);
@@ -328,12 +329,12 @@ int main(int argc, char* argv[])
     const char* pcap_path = (argc > 1) ? argv[1] : "your.pcap";
 
     YLPDriverParam param;
-    param.lidar_type  = LidarType::P60;           // 根据录制雷达选择
+    param.lidar_type  = LidarType::P60;           // Match the LiDAR used during recording
     param.input_type  = InputType::PCAP_FILE;
     param.input_param.pcap_path   = pcap_path;
-    param.input_param.pcap_repeat = false;         // true：循环播放
-    param.input_param.pcap_rate   = 1.0f;          // 播放速率倍数
-    param.input_param.msop_port   = 51180;         // 必须与录制时端口一致
+    param.input_param.pcap_repeat = false;         // true: loop playback
+    param.input_param.pcap_rate   = 1.0f;          // Playback speed multiplier
+    param.input_param.msop_port   = 51180;         // Must match the port used during recording
     param.input_param.difop_port  = 9988;
 
     param.decoder_param.wait_for_difop  = false;
@@ -359,9 +360,9 @@ int main(int argc, char* argv[])
 
 ---
 
-### 3. 多雷达同时接收
+### 3. Multiple LiDARs
 
-每个雷达实例化一个 `LidarDriver`，端口不同即可：
+Instantiate one `LidarDriver` per sensor with different ports:
 
 ```cpp
 YLPDriverParam param_left;
@@ -373,65 +374,65 @@ param_left.input_param.difop_port = 9988;
 YLPDriverParam param_right;
 param_right.lidar_type             = LidarType::V192;
 param_right.input_type             = InputType::ONLINE_LIDAR;
-param_right.input_param.msop_port  = 51181;   // 不同端口
+param_right.input_param.msop_port  = 51181;   // Different port
 param_right.input_param.difop_port = 9989;
 
 LidarDriver<CloudMsg> driver_left, driver_right;
-// 分别注册回调、init、start ...
+// Register callbacks, init, and start for each ...
 ```
 
 ---
 
-## 关键参数说明
+## Parameter Reference
 
 ### `YLPDecoderParam`
 
-| 参数 | 默认 | 说明 |
-|------|------|------|
-| `wait_for_difop` | true | 等收到 DIFOP 包才开始出点；PCAP 回放建议设 false |
-| `use_lidar_clock` | false | false：用系统时钟；true：用雷达内部时钟 |
-| `dense_points` | false | true：丢弃 NaN 点（距离为 0）；false：保留 |
-| `enable_dual_mode` | true | 双回波模式 |
-| `calib_file` | `""` | 标定文件名或绝对路径；为空时自动用默认文件名 |
-| `min_distance` / `max_distance` | 0 | 距离过滤（米），两者均为 0 时不过滤 |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `wait_for_difop` | true | Wait for a DIFOP packet before outputting points; set to false for PCAP replay |
+| `use_lidar_clock` | false | false: use system clock; true: use LiDAR internal clock |
+| `dense_points` | false | true: discard NaN points (zero distance); false: keep them |
+| `enable_dual_mode` | true | Dual-return mode |
+| `calib_file` | `""` | Calibration filename or absolute path; uses default when empty |
+| `min_distance` / `max_distance` | 0 | Distance filter (meters); no filtering when both are 0 |
 
 ### `YLPInputParam`
 
-| 参数 | 默认 | 说明 |
-|------|------|------|
-| `msop_port` | 51180 | 雷达数据包端口 |
-| `difop_port` | 9988 | 雷达配置包端口 |
-| `host_address` | `"0.0.0.0"` | 绑定本机 IP，多网卡时需指定 |
-| `pcap_path` | `""` | PCAP 文件绝对路径 |
-| `pcap_repeat` | true | PCAP 到末尾是否循环 |
-| `pcap_rate` | 1.0 | 播放速率（2.0 = 2 倍速） |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `msop_port` | 51180 | LiDAR data packet port |
+| `difop_port` | 9988 | LiDAR configuration packet port |
+| `host_address` | `"0.0.0.0"` | Bind to a specific NIC address (required for multi-NIC setups) |
+| `pcap_path` | `""` | Absolute path to the PCAP file |
+| `pcap_repeat` | true | Loop when PCAP reaches the end |
+| `pcap_rate` | 1.0 | Playback speed multiplier (2.0 = 2× speed) |
 
 ---
 
-## 错误码
+## Error Codes
 
-| 错误码 | 类型 | 含义 |
-|--------|------|------|
-| `ERRCODE_PCAPEXIT` | INFO | PCAP 播放结束（不重复时触发） |
-| `ERRCODE_PCAPREPEAT` | INFO | PCAP 到末尾并重新开始 |
-| `ERRCODE_MSOPTIMEOUT` | WARNING | 超过 1 秒未收到数据包 |
-| `ERRCODE_ZEROPOINTS` | WARNING | 本帧点数为 0 |
-| `ERRCODE_PKTBUFOVERFLOW` | WARNING | 包队列溢出（处理速度跟不上） |
-| `ERRCODE_PCAPWRONGPATH` | ERROR | PCAP 文件路径不存在 |
-| `ERRCODE_STARTBEFOREINIT` | ERROR | 未调用 `init()` 就调用了 `start()` |
+| Code | Severity | Description |
+|------|----------|-------------|
+| `ERRCODE_PCAPEXIT` | INFO | PCAP playback finished (non-repeat mode) |
+| `ERRCODE_PCAPREPEAT` | INFO | PCAP reached the end and restarted |
+| `ERRCODE_MSOPTIMEOUT` | WARNING | No data packet received for over 1 second |
+| `ERRCODE_ZEROPOINTS` | WARNING | Current frame has 0 points |
+| `ERRCODE_PKTBUFOVERFLOW` | WARNING | Packet queue overflow (processing too slow) |
+| `ERRCODE_PCAPWRONGPATH` | ERROR | PCAP file path does not exist |
+| `ERRCODE_STARTBEFOREINIT` | ERROR | `start()` called before `init()` |
 
 ---
 
-## 标定文件
+## Calibration Files
 
-标定文件位于 `src/ylp_driver/config/`，安装后在 `<prefix>/share/ylp_driver/config/`。
+Calibration files are located at `src/ylp_driver/config/` (after installation: `<prefix>/share/ylp_driver/config/`).
 
-驱动按以下顺序查找标定文件：
-1. `calib_file` 指定的绝对路径
-2. 当前工作目录下同名文件
-3. 可执行文件同级目录下同名文件（自动查找，**通常不需要手动配置**）
+The driver searches for calibration files in the following order:
+1. Absolute path specified in `calib_file`
+2. File with the same name in the current working directory
+3. File with the same name alongside the executable (automatic — **usually no manual configuration needed**)
 
-手动指定路径：
+To specify the path manually:
 
 ```cpp
 param.decoder_param.calib_file = "/usr/local/share/ylp_driver/config/V192-Correction.json";
@@ -439,25 +440,24 @@ param.decoder_param.calib_file = "/usr/local/share/ylp_driver/config/V192-Correc
 
 ---
 
-## 常见问题
+## FAQ
 
-**Q: 收不到点云？**  
-检查防火墙是否放行 MSOP 端口（默认 51180）和 DIFOP 端口（默认 9988）：
+**Q: Not receiving point clouds?**
+Check that your firewall allows UDP traffic on the MSOP port (default 51180) and DIFOP port (default 9988):
 ```bash
 sudo ufw allow 51180/udp
 sudo ufw allow 9988/udp
 ```
 
-**Q: 运行时找不到 `libaglidar_ag1.so`？**  
+**Q: `libaglidar_ag1.so` not found at runtime?**
 ```bash
 export LD_LIBRARY_PATH=/path/to/yiliphoton_lidar_sdk/lib:$LD_LIBRARY_PATH
-# 或安装后直接 ldconfig
+# Or after installation:
 sudo ldconfig
 ```
 
-**Q: ARM 平台如何使用？**  
-在 CMakeLists.txt 中修改库搜索路径指向 `lib/arm64`：
+**Q: How to build for ARM platforms?**
+Update the library search path in CMakeLists.txt to point to `lib/arm64`:
 ```cmake
 find_library(YLP_AG1_LIB aglidar_ag1 PATHS ${CMAKE_CURRENT_LIST_DIR}/lib/arm64)
 ```
-
