@@ -1,0 +1,231 @@
+{
+  "elevation": [
+    50.0, 49.375, 48.75, 48.125, 47.5, 46.875, 46.25, 45.625,
+    45.0, 44.375, 43.75, 43.125, 42.5, 41.875, 41.25, 40.625,
+    40.0, 39.375, 38.75, 38.125, 37.5, 36.875, 36.25, 35.625,
+    35.0, 34.375, 33.75, 33.125, 32.5, 31.875, 31.25, 30.625,
+    30.0, 29.375, 28.75, 28.125, 27.5, 26.875, 26.25, 25.625,
+    25.0, 24.375, 23.75, 23.125, 22.5, 21.875, 21.25, 20.625,
+    20.0, 19.375, 18.75, 18.125, 17.5, 16.875, 16.25, 15.625,
+    15.0, 14.375, 13.75, 13.125, 12.5, 11.875, 11.25, 10.625,
+    10.0, 9.375, 8.75, 8.125, 7.5, 6.875, 6.25, 5.625,
+    5.0, 4.375, 3.75, 3.125, 2.5, 1.875, 1.25, 0.625,
+    0.0, -0.625, -1.25, -1.875, -2.5, -3.125, -3.75, -4.375,
+    -5.0, -5.625, -6.25, -6.875, -7.5, -8.125, -8.75, -9.375
+  ],
+  "elevation_mirror_offset": [0.0, 0.0, 0.0, 0.0],
+  "elevation_mirror_offset_enable": false,
+  "LD_azimuth_offset_std": 0,
+  "LD_azimuth_offset_num": 0,
+  "LD_azimuth_offset": [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2
+  ],
+  "azimuth_mirror_offset": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "azimuth_mirror_offset_enable": false,
+  "extrinsic": [
+    -0.0,
+    -0.0,
+    -0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "intensity_phighs": [],
+  "intensity_steplowks": [],
+  "algorithm": {
+    "point_cloud_filter": {
+      "enable": true,
+      "filter_flag": true,
+      "ground_protect_flag": false,
+      "ground_angle_threshold": 5,
+      "gHIdx": 60,
+      "gLIdx": 0,
+      "diffIdx": 12,
+      "dis_fixed": 400,
+      "dis_thread_fixed": 30,
+      "dis_delta": 3000,
+      "dis_k": 10,
+      "dis_thread_dy": 30,
+      "num_thread_dy": 4,
+      "ground_protect_dis": 6500,
+      "sensorMountAngle": 0,
+      "dis_seg": [3000,8000,50000 ],
+      "thres_func_param": [
+        [3000,0,1000,3,130],
+        [3000,37,1000,2,130],
+        [3000,37, 1000, 2,130]
+      ],
+      "smooth_flag": false,
+      "fix_ground_walkerror_flag": false,
+      "check_neibor_num": 1,
+      "neibor_interval": 1,
+      "valid_num_thres": 0,
+      "close_dis_thres": 50,
+      "algo_version_nf": 1,
+      "groundCompensationFlag": 2,
+      "groundDisThr": 0.233,
+      "groundCompensationThr": 600,
+      "ground_unprotect_dis": 1000,
+      "inter_process_flag": true,
+      "inter_dis_thres": 500,
+      "color_debug": false,
+      "planar_assist_filter_flag": true,
+      "planar_assist_thres": 0.05,
+      "ground_filter_flag": true,
+      "ground_filter_params": [
+        [3000, 0, 1000, 2, 300],
+        [3000, 0, 1000, 1, 500],
+        [3000, 0, 1000, 1, 500]
+      ],
+      "ref_calib_flag": true,
+      "ref_set_params": [-60, 0, 0, 200, 70, 100, 170, -15, -15, -20, -60]
+    },
+    "crosstalk_filter": {
+      "enable": true,
+      "dy_pw_refer_flag": false,
+      "peak_select_flag": true,
+      "crosstalk_rate_th": 0.8,
+      "pointcloud_dis_th": 2000.0,
+      "href_th_far": 5000,
+      "href_th_close": 6500,
+      "emission_num": 4,
+      "algo_version_cr": 0,
+      "href_pos_th": 20,
+      "crosstalk_dis_th": 40.0,
+      "abnorm_width_th": 80.0,
+      "process_192_line_flag": false,
+      "col_helper_flag": false,
+      "high_out_flag": true,
+      "valid_echo_assist_flag": false,
+      "key_dis": [
+        3000,
+        50000
+      ],
+      "thres_func_param": [
+        [
+          0,
+          200
+        ],
+        [
+          0,
+          180
+        ]
+      ],
+      "ratio_high": 0,
+      "ratio_low": 0,
+      "neibor_key_dis": [
+        3500,
+        5000,
+        50000
+      ],
+      "neibor_value_param": [
+        [
+          4,
+          4
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "echo_select": [
+        1,
+        1
+      ],
+      "echo_option": 3,
+      "refer_option": 0,
+      "pw_define_option": 2,
+      "use_path_filter_flag": true,
+      "use_path_filter_dis": 350,
+      "fake_path_filter_flag": false,
+      "fake_down_pixel_num": 12,
+      "fake_high_filter_flag": true,
+      "fake_high_filter_hight": 400,
+      "fake_high_filter_harder_flag": true,
+      "fake_high_filter_harder_hight": 700,
+      "fake_use_ld_all_flag": false,
+      "low_ref_set_flag": false,
+      "low_ref_set_value": 30,
+      "use_path_protect_flag": false,
+      "use_path_protect_dis": 30,
+      "gf_scale_max_height": 50,
+      "need_valid_neighbor_num": 1,
+      "gf_scale_assist_flag": true,
+      "peak_filter_flag": true,
+      "peak_thres_offset": 150,
+      "peak_filter_float_assist_flag": true
+    },
+    "ghost_cleaning": {
+      "enable": false,
+      "z_plane_threshold": 0.1
+    },
+    "low_reflectivity_filter": {
+      "enable": false
+    },
+    "blind_line_filter": {
+      "enable": false,
+      "blind_line_dis": 80
+    },
+    "dynamic_power_compensation": {
+      "enable": false,
+      "distance_threshold_start": 2.5,
+      "distance_threshold_end": 100.0,
+      "k": 0.01,
+      "b": 0.1,
+      "d": 30.0
+    },
+    "blind_area_filter": {
+      "enable": false,
+      "azimuth0": -0.06,
+      "azimuth1": -20,
+      "azimuth2": -20,
+      "azimuth3": -20,
+      "azimuth4": -20,
+      "minDisInvalid": 0.5,
+      "maxDisInvalid": 2.0,
+      "windowStep": 20,
+      "windowWidth": 40,
+      "windowHeight": 24
+    },
+    "expansion_filter": {
+      "enable": false,
+      "highRefThr": 150,
+      "step": 10,
+      "nearThr": 30,
+      "weakRefThr": 30
+    },
+    "trailing_filter": {
+      "enable": true,
+      "dthr0": 100,
+      "dthr1": 310,
+      "dthr2": 30,
+      "dthr4": 20000,
+      "phithr": -1,
+      "kslop": 0.3
+    },
+    "range_image": {
+    "enable": true,
+    "half_azimuth": 2,
+    "half_ring": 1,
+    "ratio_thr": 0.015,
+    "min_valid": 4
+    }
+  }
+}

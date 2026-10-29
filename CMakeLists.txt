@@ -1,170 +1,191 @@
-cmake_minimum_required(VERSION 3.5)
-project(ylp_driver VERSION 1.0.0)
+cmake_minimum_required(VERSION 3.16)
+set(LIDAR_SDK_VERSION "1.1.1" CACHE STRING "LiDAR SDK release version")
+project(lidar_sdk VERSION ${LIDAR_SDK_VERSION} LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-
-if(CMAKE_BUILD_TYPE STREQUAL "")
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-message("-- Build type: ${CMAKE_BUILD_TYPE}")
-
-# ============================================================
-#  Options
-# ============================================================
-option(DISABLE_PCAP_PARSE        "Disable PCAP file parse"             OFF)
-option(ENABLE_TRANSFORM          "Enable point transform (Eigen)"       OFF)
-option(ENABLE_MOTION_COMPENSATION "Enable IMU motion compensation"      OFF)
-option(ENABLE_DOUBLE_RCVBUF      "Double UDP receive buffer size"       ON)
-option(ENABLE_THREAD_PRIORITY    "Raise recv/process thread priority"   OFF)
-option(ENABLE_PCL_POINTCLOUD     "Use PCL PointCloud type"              OFF)
-option(ENABLE_CRC32_CHECK        "Enable CRC32 check on MSOP packets"   OFF)
-option(ENABLE_POINT_EXTEND_FIELD "Enable azimuth/elevation in output"   OFF)
-option(COMPILE_DEMOS             "Build demo programs"                  ON)
-option(COMPILE_TOOLS             "Build tool programs"                  OFF)
-
-# ============================================================
-#  Platform
-# ============================================================
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-parameter")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-  set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -g")
-endif()
-
-# ============================================================
-#  Include paths
-# ============================================================
-set(DRIVER_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/src)
-include_directories(${DRIVER_INCLUDE_DIRS})
-
-# ============================================================
-#  External dependencies
-# ============================================================
-list(APPEND EXTERNAL_LIBS pthread)
-
-if(NOT DISABLE_PCAP_PARSE)
-  list(APPEND EXTERNAL_LIBS pcap)
-else()
-  add_definitions(-DDISABLE_PCAP_PARSE)
-endif()
-
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
-
-# Software filter precompiled library
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
-  set(YLP_LIB_ARCH_DIR arm64)
-else()
-  set(YLP_LIB_ARCH_DIR x86-64)
-endif()
-message("-- Target arch lib dir: ${YLP_LIB_ARCH_DIR}")
-
-find_library(YLP_AG1_LIB aglidar_ag1 PATHS ${CMAKE_CURRENT_LIST_DIR}/lib/${YLP_LIB_ARCH_DIR})
-if(YLP_AG1_LIB)
-  add_library(_ylp_aglidar_ag1 SHARED IMPORTED GLOBAL)
-  set_target_properties(_ylp_aglidar_ag1 PROPERTIES IMPORTED_LOCATION "${YLP_AG1_LIB}")
-  list(APPEND EXTERNAL_LIBS ${YLP_AG1_LIB})
-  message("-- Found software filter library: ${YLP_AG1_LIB}")
-else()
-  message(WARNING "Software filter library (libaglidar_ag1) not found")
-endif()
-
-# ============================================================
-#  Feature flags
-# ============================================================
-if(ENABLE_TRANSFORM)
-  add_definitions(-DENABLE_TRANSFORM)
-endif()
-
-if(ENABLE_MOTION_COMPENSATION)
-  add_definitions(-DENABLE_MOTION_COMPENSATION)
-endif()
-
-if(ENABLE_DOUBLE_RCVBUF)
-  add_definitions(-DENABLE_DOUBLE_RCVBUF)
-endif()
-
-if(ENABLE_THREAD_PRIORITY)
-  add_definitions(-DENABLE_THREAD_PRIORITY)
-  add_definitions(-DHIGH_THREAD_PRIORITY=11)
-endif()
-
-if(ENABLE_PCL_POINTCLOUD)
-  add_definitions(-DENABLE_PCL_POINTCLOUD)
-  find_package(PCL REQUIRED)
-  include_directories(${PCL_INCLUDE_DIRS})
-  link_directories(${PCL_LIBRARY_DIRS})
-  add_definitions(${PCL_DEFINITIONS})
-  list(APPEND EXTERNAL_LIBS ${PCL_LIBRARIES})
-endif()
-
-if(ENABLE_CRC32_CHECK)
-  add_definitions(-DENABLE_CRC32_CHECK)
-endif()
-
-if(ENABLE_POINT_EXTEND_FIELD)
-  add_definitions(-DENABLE_POINT_EXTEND_FIELD)
-endif()
-
-# ============================================================
-#  Core library (compiled .cpp files from the SDK)
-# ============================================================
-set(YLP_DRIVER_SOURCES
-  src/ylp_driver/driver/decoder/reflectivity_compensation.cpp
-)
-
-add_library(ylp_driver_core STATIC ${YLP_DRIVER_SOURCES})
-target_include_directories(ylp_driver_core PUBLIC
-  $<BUILD_INTERFACE:${DRIVER_INCLUDE_DIRS}>
-  $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(ylp_driver_core PUBLIC
-  pthread
-  Eigen3::Eigen
-  $<$<NOT:$<BOOL:${DISABLE_PCAP_PARSE}>>:pcap>
-  $<BUILD_INTERFACE:$<$<BOOL:${YLP_AG1_LIB}>:_ylp_aglidar_ag1>>
-  $<INSTALL_INTERFACE:$<$<BOOL:${YLP_AG1_LIB}>:ylp_driver::aglidar_ag1>>
-)
-add_library(ylp_driver::ylp_driver_core ALIAS ylp_driver_core)
-list(APPEND EXTERNAL_LIBS ylp_driver_core)
-
-# ============================================================
-#  Sub-targets
-# ============================================================
-if(COMPILE_DEMOS)
-  add_subdirectory(demo)
-endif()
-
-if(COMPILE_TOOLS)
-  add_subdirectory(tool)
-endif()
-
-# ============================================================
-#  Install rules — enables find_package(ylp_driver) for consumers
-# ============================================================
 include(GNUInstallDirs)
 
-install(DIRECTORY src/ylp_driver DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
-  PATTERN "config" EXCLUDE)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-install(TARGETS ylp_driver_core
-  EXPORT ylp_driverTargets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+option(DISABLE_PCAP_PARSE "Disable PCAP file parsing" OFF)
+option(ENABLE_TRANSFORM "Enable point transform" OFF)
+option(ENABLE_DOUBLE_RCVBUF "Double UDP receive buffer size" ON)
+option(ENABLE_THREAD_PRIORITY "Raise receive and processing thread priority" OFF)
+option(ENABLE_CRC32_CHECK "Enable CRC32 checking on MSOP packets" OFF)
+option(ENABLE_POINT_EXTEND_FIELD "Enable azimuth/elevation fields internally" OFF)
+option(BUILD_DEMO "Build the public API demo" ON)
+option(BUILD_PCAP_TEST "Build the PCAP smoke test" OFF)
 
-if(YLP_AG1_LIB)
-  install(FILES ${YLP_AG1_LIB} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-Wall -Wno-unused-parameter)
 endif()
 
+set(SDK_INTERNAL_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+
+find_package(Eigen3 REQUIRED)
+
+if(NOT DISABLE_PCAP_PARSE)
+  find_library(PCAP_LIBRARY pcap REQUIRED)
+endif()
+
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" LIDAR_SDK_TARGET_PROCESSOR)
+if(LIDAR_SDK_TARGET_PROCESSOR MATCHES "^(x86_64|amd64)$")
+  set(LIB_ARCH_DIR x86-64)
+  set(LIDAR_SDK_PACKAGE_ARCH x86_64)
+elseif(LIDAR_SDK_TARGET_PROCESSOR MATCHES "^(aarch64|arm64)$")
+  set(LIB_ARCH_DIR arm64)
+  set(LIDAR_SDK_PACKAGE_ARCH aarch64)
+else()
+  message(FATAL_ERROR
+    "Unsupported target processor: ${CMAKE_SYSTEM_PROCESSOR}. "
+    "Supported processors are x86_64/amd64 and aarch64/arm64.")
+endif()
+
+find_library(LIDAR_ALGO_LIB lidar_algo PATHS ${CMAKE_CURRENT_LIST_DIR}/lib/${LIB_ARCH_DIR} NO_DEFAULT_PATH REQUIRED)
+add_library(lidar_algo SHARED IMPORTED GLOBAL)
+set_target_properties(lidar_algo PROPERTIES IMPORTED_LOCATION "${LIDAR_ALGO_LIB}")
+
+set(SDK_PRIVATE_DEFINITIONS)
+if(DISABLE_PCAP_PARSE)
+  list(APPEND SDK_PRIVATE_DEFINITIONS DISABLE_PCAP_PARSE)
+endif()
+if(ENABLE_TRANSFORM)
+  list(APPEND SDK_PRIVATE_DEFINITIONS ENABLE_TRANSFORM)
+endif()
+if(ENABLE_DOUBLE_RCVBUF)
+  list(APPEND SDK_PRIVATE_DEFINITIONS ENABLE_DOUBLE_RCVBUF)
+endif()
+if(ENABLE_THREAD_PRIORITY)
+  list(APPEND SDK_PRIVATE_DEFINITIONS ENABLE_THREAD_PRIORITY HIGH_THREAD_PRIORITY=11)
+endif()
+if(ENABLE_CRC32_CHECK)
+  list(APPEND SDK_PRIVATE_DEFINITIONS ENABLE_CRC32_CHECK)
+endif()
+if(ENABLE_POINT_EXTEND_FIELD)
+  list(APPEND SDK_PRIVATE_DEFINITIONS ENABLE_POINT_EXTEND_FIELD)
+endif()
+
+set(LIDAR_SDK_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in"
+  "${LIDAR_SDK_GENERATED_DIR}/core/common/version.hpp"
+  @ONLY)
+
+add_library(lidar_sdk SHARED
+  src/api/lidar_sdk.cpp
+  src/core/driver/decoder/reflectivity_compensation.cpp
+)
+add_library(lidar_sdk::lidar_sdk ALIAS lidar_sdk)
+
+target_compile_definitions(lidar_sdk PRIVATE
+  LIDAR_SDK_BUILDING_LIBRARY
+  ${SDK_PRIVATE_DEFINITIONS}
+)
+target_include_directories(lidar_sdk
+  PRIVATE ${LIDAR_SDK_GENERATED_DIR} ${SDK_INTERNAL_INCLUDE_DIR}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_link_libraries(lidar_sdk PRIVATE
+  Eigen3::Eigen
+  ${CMAKE_DL_LIBS}
+  pthread
+  lidar_algo
+)
+if(NOT DISABLE_PCAP_PARSE)
+  target_link_libraries(lidar_sdk PRIVATE ${PCAP_LIBRARY})
+endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(lidar_sdk PRIVATE -fvisibility=hidden)
+endif()
+set_target_properties(lidar_sdk PROPERTIES
+  EXPORT_NAME lidar_sdk
+  VERSION ${PROJECT_VERSION}
+  SOVERSION 1
+  BUILD_RPATH "$ORIGIN"
+  INSTALL_RPATH "$ORIGIN"
+)
+
+set(LIDAR_SDK_BUILD_INFO "${CMAKE_CURRENT_BINARY_DIR}/BUILD-INFO.txt")
+file(WRITE "${LIDAR_SDK_BUILD_INFO}"
+  "LiDAR SDK Build Information\n"
+  "Version: ${PROJECT_VERSION}\n"
+  "Target system: ${CMAKE_SYSTEM_NAME}\n"
+  "Target processor: ${CMAKE_SYSTEM_PROCESSOR}\n"
+  "Package architecture: ${LIDAR_SDK_PACKAGE_ARCH}\n"
+  "C compiler: ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}\n"
+  "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}\n"
+  "Build type: ${CMAKE_BUILD_TYPE}\n")
+
+if(BUILD_PCAP_TEST)
+  add_executable(lidar_sdk_pcap_test tests/pcap_smoke_test.c)
+  target_link_libraries(lidar_sdk_pcap_test PRIVATE lidar_sdk)
+  set_target_properties(lidar_sdk_pcap_test PROPERTIES
+    LINKER_LANGUAGE CXX
+    INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
+  )
+endif()
+
+if(BUILD_DEMO)
+  add_executable(demo demo/demo.c)
+  target_link_libraries(demo PRIVATE lidar_sdk)
+  set_target_properties(demo PROPERTIES
+    LINKER_LANGUAGE CXX
+    INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
+  )
+endif()
+
+install(DIRECTORY include/lidar_sdk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS lidar_sdk
+  EXPORT lidar_sdkTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(FILES ${LIDAR_ALGO_LIB} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES
-  src/ylp_driver/config/P60-Correction.json
-  src/ylp_driver/config/V192-Correction.json
-  DESTINATION ${CMAKE_INSTALL_DATADIR}/ylp_driver/config)
+  resources/calibration/P60-Correction.json
+  resources/calibration/V192-Correction.json
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/lidar_sdk/config)
+install(EXPORT lidar_sdkTargets
+  FILE lidar_sdkTargets.cmake
+  NAMESPACE lidar_sdk::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/lidar_sdk)
+install(FILES cmake/lidar_sdkConfig.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/lidar_sdk)
+install(FILES README.md README_EN.md ${LIDAR_SDK_BUILD_INFO}
+  DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES README.md README_EN.md
+  DESTINATION .)
+install(FILES QUICKSTART_BINARY.md
+  DESTINATION .
+  RENAME QUICKSTART.md)
+install(FILES QUICKSTART_BINARY_EN.md
+  DESTINATION .
+  RENAME QUICKSTART_EN.md)
+install(FILES QUICKSTART_BINARY.md
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}
+  RENAME QUICKSTART.md)
+install(FILES QUICKSTART_BINARY_EN.md
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}
+  RENAME QUICKSTART_EN.md)
+install(DIRECTORY examples/consumer_cmake
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/lidar_sdk/examples
+  FILES_MATCHING PATTERN "CMakeLists.txt" PATTERN "*.c" PATTERN "*.h" PATTERN "*.md")
+if(BUILD_DEMO)
+  install(TARGETS demo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
-install(EXPORT ylp_driverTargets
-  FILE ylp_driverTargets.cmake
-  NAMESPACE ylp_driver::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ylp_driver)
-
-install(FILES cmake/ylp_driverConfig.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ylp_driver)
+string(TOLOWER "${CMAKE_SYSTEM_NAME}" LIDAR_SDK_PACKAGE_SYSTEM)
+set(CPACK_GENERATOR "TGZ")
+set(CPACK_PACKAGE_NAME "lidar_sdk")
+set(CPACK_PACKAGE_VENDOR "LiDAR SDK")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME
+  "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${LIDAR_SDK_PACKAGE_SYSTEM}-${LIDAR_SDK_PACKAGE_ARCH}")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
+set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_LIST_DIR}/README_EN.md")
+include(CPack)
